@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calibragem • Frota</title>
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> Frota</div>
+  <nav>
+    <a href="./lubrificacao.html">Lubrificação</a>
+    <a href="./calibragem.html" class="active">Calibragem</a>
+  </nav>
+  <div class="user">
+    <span id="user-email"></span>
+    <button class="btn-logout" id="btn-logout">Sair</button>
+  </div>
+</div>
+
+<div class="page-head">
+  <h1>Calibragem</h1>
+  <p>Mesma frota da lubrificação, para o serviço de calibragem. Arraste um card para outra coluna, ou use os botões ‹ › / a lista de cada card.</p>
+  <div class="legend">
+    <span><i class="truck"></i> Truck (sem julieta)</span>
+    <span><i class="conjunto"></i> Conjunto (truck + julieta)</span>
+  </div>
+</div>
+
+<div class="board" id="board">
+  <p style="padding:20px;color:#9AA0AC">Carregando…</p>
+</div>
+
+<script type="module">
+  import { initBoard } from './board.js';
+  initBoard('calibragem');
+</script>
+
+</body>
+</html>

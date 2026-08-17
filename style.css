@@ -1,0 +1,317 @@
+/* ===== Frota • Lubrificação & Calibragem =====
+   Identidade: painel de operação de pátio — asfalto escuro,
+   laranja de sinalização para ação, placas em fonte mono. */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Work+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --bg: #14161B;
+  --panel: #1B1E25;
+  --panel-2: #232732;
+  --panel-3: #2B303C;
+  --border: #343A48;
+  --text: #F2F3F5;
+  --text-dim: #9AA0AC;
+  --accent: #FF6A3D;
+  --accent-dim: #C2502C;
+  --truck: #FFC145;
+  --conjunto: #3FD6A3;
+  --danger: #FF5C5C;
+  --radius: 10px;
+  --font-display: 'Space Grotesk', 'Work Sans', sans-serif;
+  --font-body: 'Work Sans', sans-serif;
+  --font-plate: 'JetBrains Mono', monospace;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  margin:0; padding:0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+body{
+  background-image:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 64px);
+}
+
+a{ color: inherit; }
+
+::selection{ background: var(--accent); color: #14161B; }
+
+/* ---------- Top bar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 22px;
+  background: var(--panel);
+  border-bottom: 3px solid var(--accent);
+  position: sticky; top:0; z-index: 50;
+}
+.topbar .brand{
+  display:flex; align-items:center; gap:10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+}
+.topbar .brand .dot{
+  width:10px; height:10px; border-radius: 3px;
+  background: var(--accent);
+  transform: rotate(45deg);
+  flex: none;
+}
+.topbar nav{ display:flex; gap:6px; align-items:center; }
+.topbar nav a{
+  text-decoration:none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+}
+.topbar nav a.active{
+  color: var(--text);
+  background: var(--panel-3);
+  border-color: var(--border);
+}
+.topbar nav a:hover{ color: var(--text); }
+.topbar .user{
+  display:flex; align-items:center; gap:12px;
+  font-size: 13px; color: var(--text-dim);
+}
+.btn-logout{
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor:pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+.btn-logout:hover{ border-color: var(--danger); color: var(--danger); }
+
+/* ---------- Page header ---------- */
+.page-head{
+  padding: 20px 22px 6px;
+}
+.page-head h1{
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+.page-head p{
+  margin:0; color: var(--text-dim); font-size: 14px;
+}
+.legend{
+  display:flex; gap:16px; margin-top:10px; font-size: 12px; color: var(--text-dim);
+}
+.legend span{ display:flex; align-items:center; gap:6px; }
+.legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+.legend i.truck{ background: var(--truck); }
+.legend i.conjunto{ background: var(--conjunto); }
+
+/* ---------- Board ---------- */
+.board{
+  display:flex;
+  gap: 14px;
+  padding: 16px 22px 40px;
+  overflow-x: auto;
+  align-items: flex-start;
+}
+.column{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 250px;
+  max-width: 270px;
+  flex: 1 0 250px;
+  display:flex; flex-direction:column;
+  max-height: calc(100vh - 190px);
+}
+.column.pool{
+  border-style: dashed;
+  background: transparent;
+}
+.column-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  position: sticky; top:0;
+  background: inherit;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.column-header .count{
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--panel-3);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.column-header input.rotulo-edit{
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  width: 100%;
+  padding: 0;
+}
+.column-header input.rotulo-edit:focus{
+  outline: 1px dashed var(--accent);
+}
+.column-body{
+  padding: 10px;
+  display:flex; flex-direction: column; gap: 8px;
+  overflow-y:auto;
+}
+.column-body:empty::after{
+  content: "Sem placas nesta coluna";
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 10px 4px;
+  display:block;
+}
+.column.drag-over{ border-color: var(--accent); }
+
+/* ---------- Card ---------- */
+.card{
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--truck);
+  border-radius: 8px;
+  padding: 9px 10px;
+  cursor: grab;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.card:active{ cursor: grabbing; }
+.card.conjunto{ border-left-color: var(--conjunto); }
+.card.dragging{ opacity: .4; }
+.card:hover{ transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+
+.card-top{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom: 6px;
+}
+.tipo-badge{
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--bg);
+  background: var(--truck);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.card.conjunto .tipo-badge{ background: var(--conjunto); }
+
+.move-menu{ display:flex; align-items:center; gap:3px; }
+.mv-btn{
+  width: 20px; height:20px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--panel-3);
+  color: var(--text-dim);
+  cursor:pointer;
+  font-size: 12px;
+  line-height: 1;
+  display:flex; align-items:center; justify-content:center;
+  padding: 0;
+}
+.mv-btn:hover{ color: var(--text); border-color: var(--accent); }
+.mv-select{
+  background: var(--panel-3);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 10px;
+  padding: 2px;
+  max-width: 62px;
+}
+
+.plate{
+  font-family: var(--font-plate);
+  letter-spacing: 1px;
+}
+.plate.placa{
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.plate.reboque{
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* ---------- Login ---------- */
+.login-wrap{
+  min-height: 100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding: 20px;
+}
+.login-card{
+  width: 100%; max-width: 360px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 30px 26px;
+}
+.login-card .brand{
+  display:flex; align-items:center; gap:10px;
+  font-family: var(--font-display); font-weight:700; font-size: 20px;
+  margin-bottom: 4px;
+}
+.login-card .brand .dot{
+  width:11px; height:11px; border-radius:3px; background: var(--accent); transform: rotate(45deg);
+}
+.login-card p.sub{ color: var(--text-dim); font-size: 13px; margin: 0 0 22px; }
+.field{ margin-bottom: 14px; }
+.field label{ display:block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; }
+.field input{
+  width:100%;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.field input:focus{ outline: none; border-color: var(--accent); }
+.btn-primary{
+  width:100%;
+  background: var(--accent);
+  color: #14161B;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  cursor:pointer;
+  margin-top: 4px;
+}
+.btn-primary:hover{ background: #ff7c53; }
+.btn-primary:disabled{ opacity:.6; cursor:default; }
+.form-msg{ font-size: 12px; margin-top: 12px; min-height: 16px; }
+.form-msg.error{ color: var(--danger); }
+.form-msg.ok{ color: var(--conjunto); }
+
+@media (max-width: 640px){
+  .topbar{ flex-wrap: wrap; gap:10px; }
+  .board{ padding: 12px; }
+}

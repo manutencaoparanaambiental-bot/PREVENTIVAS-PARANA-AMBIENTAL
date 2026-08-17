@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Entrar • Frota</title>
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="brand"><span class="dot"></span> Frota</div>
+    <p class="sub">Lubrificação, engraxamento e calibragem</p>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn-primary" id="btn-entrar">Entrar</button>
+      <p class="form-msg" id="msg"></p>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from './supabaseClient.js';
+
+  // Se já estiver logado, vai direto pro quadro de lubrificação
+  const { data: { session } } = await supabase.auth.getSession();
+  if(session){ window.location.href = './lubrificacao.html'; }
+
+  const form = document.getElementById('login-form');
+  const msg = document.getElementById('msg');
+  const btn = document.getElementById('btn-entrar');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    msg.textContent = '';
+    msg.className = 'form-msg';
+
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+
+    if(error){
+      msg.textContent = 'E-mail ou senha inválidos.';
+      msg.className = 'form-msg error';
+      btn.disabled = false;
+      return;
+    }
+    window.location.href = './lubrificacao.html';
+  });
+</script>
+
+</body>
+</html>
