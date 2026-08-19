@@ -55,9 +55,15 @@ git push -u origin main
   do reboque (julieta) — a cor da borda indica **truck** (amarelo) ou
   **conjunto** (verde).
 - Para mover uma placa: arraste o card para outra coluna.
-- Para editar a placa ou o reboque: clique no ✎ no canto do card, altere os
-  campos e clique em Salvar. Deixar o reboque vazio marca o caminhão como
+- Para editar o caminhão/implemento: clique no ✎ no canto do card, altere os
+  campos e clique em Salvar. Deixar o implemento vazio marca o caminhão como
   truck simples; preenchido, marca como conjunto (truck + julieta).
+- Na página de Lubrificação, cada coluna mostra a **data real** (não mais
+  "Sábado 1, 2, 3...") e o **responsável**. Clique no ✎ do cabeçalho da
+  coluna para definir/alterar os dois — fica salvo no Supabase e continua
+  lá mesmo depois de atualizar a página ou sair e entrar de novo.
+- Cards de **truck** mostram só a Placa. Cards de **conjunto** mostram
+  Caminhão e Implemento separados, sem ambiguidade.
 - O nome de cada coluna (ex. "Sábado 1") pode ser editado clicando nele —
   troque pela data real do sábado quando quiser.
 - Qualquer placa cadastrada sem posição aparece na coluna tracejada

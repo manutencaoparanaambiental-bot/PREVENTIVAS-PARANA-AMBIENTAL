@@ -18,9 +18,17 @@ export async function initBoard(pagina){
   let posicoesMap = {}; // caminhao_id -> { coluna_id, ordem }
   let editingId = null;  // placa sendo editada no momento (evita perder o card durante um refresh)
   let editError = '';
+  let editingColunaId = null; // coluna (data/responsável) sendo editada no momento
+  let colunaEditError = '';
+
+  function formatarDataBR(iso){
+    if(!iso) return null;
+    const [ano, mes, dia] = iso.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
 
   async function carregarDados(){
-    if(editingId) return; // não interrompe quem está editando um card
+    if(editingId || editingColunaId) return; // não interrompe quem está editando
     const [{ data: cols, error: e1 }, { data: cams, error: e2 }, { data: pos, error: e3 }] = await Promise.all([
       supabase.from('colunas').select('*').eq('pagina', pagina).order('posicao'),
       supabase.from('caminhoes').select('*').order('placa'),
@@ -52,8 +60,8 @@ export async function initBoard(pagina){
           <div class="card-top">
             <span class="tipo-badge">${tipoLabel}</span>
           </div>
-          <input class="edit-input placa-input" data-field="placa" value="${caminhao.placa}" placeholder="Placa" />
-          <input class="edit-input reboque-input" data-field="reboque" value="${caminhao.reboque ?? ''}" placeholder="Reboque (vazio = truck simples)" />
+          <input class="edit-input placa-input" data-field="placa" value="${caminhao.placa}" placeholder="Placa do caminhão" />
+          <input class="edit-input reboque-input" data-field="reboque" value="${caminhao.reboque ?? ''}" placeholder="Placa do implemento (vazio = truck simples)" />
           ${editError ? `<div class="edit-error">${editError}</div>` : ''}
           <div class="edit-actions">
             <button class="btn-save" data-save="${caminhao.id}">Salvar</button>
@@ -62,18 +70,64 @@ export async function initBoard(pagina){
         </div>`;
     }
 
-    const reboqueHTML = caminhao.reboque
-      ? `<div class="plate reboque">${caminhao.reboque}</div>`
-      : '';
+    const corpoHTML = caminhao.tipo === 'conjunto'
+      ? `<div class="card-field"><span class="card-field-label">Caminhão</span><span class="plate placa">${caminhao.placa}</span></div>
+         <div class="card-field"><span class="card-field-label">Implemento</span><span class="plate reboque">${caminhao.reboque ?? ''}</span></div>`
+      : `<div class="card-field"><span class="card-field-label">Placa</span><span class="plate placa">${caminhao.placa}</span></div>`;
+
     return `
       <div class="card ${tipoClasse}" draggable="true" data-id="${caminhao.id}">
         <div class="card-top">
           <span class="tipo-badge">${tipoLabel}</span>
           <button class="edit-btn" data-edit="${caminhao.id}" title="Editar placa">✎</button>
         </div>
-        <div class="plate placa">${caminhao.placa}</div>
-        ${reboqueHTML}
+        ${corpoHTML}
       </div>`;
+  }
+
+  function colunaHeaderHTML(c, count){
+    const isPool = c.id === null;
+
+    if(isPool){
+      return `
+        <div class="col-head-top">
+          <span>${c.rotulo}</span>
+          <span class="count">${count}</span>
+        </div>`;
+    }
+
+    if(pagina !== 'lubrificacao'){
+      // Calibragem: mantém o comportamento original (rótulo livre editável)
+      return `
+        <div class="col-head-top">
+          <input class="rotulo-edit" data-coluna-id="${c.id}" value="${c.rotulo}" />
+          <span class="count">${count}</span>
+        </div>`;
+    }
+
+    if(editingColunaId === c.id){
+      return `
+        <div class="col-edit-form">
+          <input type="date" class="col-edit-input" data-col-field="data" value="${c.data_lubrificacao ?? ''}" />
+          <input type="text" class="col-edit-input" data-col-field="responsavel" placeholder="Responsável" value="${c.responsavel ?? ''}" />
+          ${colunaEditError ? `<div class="edit-error">${colunaEditError}</div>` : ''}
+          <div class="col-edit-actions">
+            <button class="btn-save" data-col-save="${c.id}">Salvar</button>
+            <button class="btn-cancel" data-col-cancel="${c.id}">Cancelar</button>
+          </div>
+        </div>`;
+    }
+
+    const dataLabel = formatarDataBR(c.data_lubrificacao) || 'Definir data';
+    return `
+      <div class="col-head-top">
+        <span class="col-date">${dataLabel}</span>
+        <div class="col-head-actions">
+          <button class="col-edit-btn" data-col-edit="${c.id}" title="Editar data e responsável">✎</button>
+          <span class="count">${count}</span>
+        </div>
+      </div>
+      <div class="col-resp">Responsável: ${c.responsavel || '—'}</div>`;
   }
 
   function render(){
@@ -93,14 +147,10 @@ export async function initBoard(pagina){
       const key = c.id ?? 'pool';
       const lista = porColuna[key] || [];
       const isPool = c.id === null;
-      const rotuloHTML = isPool
-        ? `<span>${c.rotulo}</span>`
-        : `<input class="rotulo-edit" data-coluna-id="${c.id}" value="${c.rotulo}" />`;
       return `
         <div class="column ${isPool ? 'pool' : ''}" data-coluna-id="${key}">
           <div class="column-header">
-            ${rotuloHTML}
-            <span class="count">${lista.length}</span>
+            ${colunaHeaderHTML(c, lista.length)}
           </div>
           <div class="column-body" data-coluna-id="${key}">
             ${lista.map(x => cardHTML(x.cam)).join('')}
@@ -151,6 +201,25 @@ export async function initBoard(pagina){
 
     editingId = null;
     editError = '';
+    await carregarDados();
+  }
+
+  async function salvarEdicaoColuna(colunaId, form){
+    const data = form.querySelector('[data-col-field="data"]').value; // 'YYYY-MM-DD' ou ''
+    const responsavel = form.querySelector('[data-col-field="responsavel"]').value.trim();
+
+    const { error } = await supabase.from('colunas')
+      .update({ data_lubrificacao: data || null, responsavel: responsavel || null })
+      .eq('id', colunaId);
+
+    if(error){
+      colunaEditError = 'Não foi possível salvar.';
+      render();
+      return;
+    }
+
+    editingColunaId = null;
+    colunaEditError = '';
     await carregarDados();
   }
 
@@ -205,12 +274,34 @@ export async function initBoard(pagina){
       });
     });
 
-    // Edição do rótulo da coluna (ex: trocar "Sábado 1" pela data real)
+    // Edição do rótulo da coluna (calibragem — comportamento original)
     boardEl.querySelectorAll('.rotulo-edit').forEach(input => {
       input.addEventListener('change', async () => {
         await supabase.from('colunas')
           .update({ rotulo: input.value })
           .eq('id', input.dataset.colunaId);
+      });
+    });
+
+    // Edição de data/responsável da coluna (lubrificação)
+    boardEl.querySelectorAll('[data-col-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        editingColunaId = btn.dataset.colEdit;
+        colunaEditError = '';
+        render();
+      });
+    });
+    boardEl.querySelectorAll('[data-col-save]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const form = btn.closest('.col-edit-form');
+        salvarEdicaoColuna(btn.dataset.colSave, form);
+      });
+    });
+    boardEl.querySelectorAll('[data-col-cancel]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        editingColunaId = null;
+        colunaEditError = '';
+        render();
       });
     });
   }
