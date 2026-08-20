@@ -1,21 +1,24 @@
 /* ===== Frota • Lubrificação & Calibragem =====
-   Identidade: painel de operação de pátio — asfalto escuro,
-   laranja de sinalização para ação, placas em fonte mono. */
+   Identidade: painel de operação de pátio, nas cores da marca
+   (verde e azul do logotipo), placas em fonte mono. */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Work+Sans:wght@400;500;600&display=swap');
 
 :root{
-  --bg: #14161B;
-  --panel: #1B1E25;
-  --panel-2: #232732;
-  --panel-3: #2B303C;
-  --border: #343A48;
+  --bg: #12151B;
+  --panel: #181C24;
+  --panel-2: #1F2530;
+  --panel-3: #262E3B;
+  --border: #303A4A;
   --text: #F2F3F5;
-  --text-dim: #9AA0AC;
-  --accent: #FF6A3D;
-  --accent-dim: #C2502C;
+  --text-dim: #97A1B0;
+  --accent: #1B8915;
+  --accent-dim: #146B10;
+  --accent-light: #2FAE28;
+  --brand-blue: #112C82;
+  --brand-blue-light: #3255C4;
   --truck: #FFC145;
-  --conjunto: #3FD6A3;
+  --conjunto: #4C7BFF;
   --danger: #FF5C5C;
   --radius: 10px;
   --font-display: 'Space Grotesk', 'Work Sans', sans-serif;
@@ -47,7 +50,8 @@ a{ color: inherit; }
   display:flex; align-items:center; justify-content:space-between;
   padding: 14px 22px;
   background: var(--panel);
-  border-bottom: 3px solid var(--accent);
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--brand-blue), var(--accent)) 1;
   position: sticky; top:0; z-index: 50;
 }
 .topbar .brand{
@@ -57,10 +61,8 @@ a{ color: inherit; }
   font-size: 18px;
   letter-spacing: 0.2px;
 }
-.topbar .brand .dot{
-  width:10px; height:10px; border-radius: 3px;
-  background: var(--accent);
-  transform: rotate(45deg);
+.topbar .brand .logo-mark{
+  height: 28px; width: auto;
   flex: none;
 }
 .topbar nav{ display:flex; gap:6px; align-items:center; }
@@ -338,7 +340,7 @@ a{ color: inherit; }
   border-color: var(--accent);
   color: #14161B;
 }
-.btn-save:hover{ background: #ff7c53; }
+.btn-save:hover{ background: var(--accent-light); }
 .btn-cancel{
   background: transparent;
   color: var(--text-dim);
@@ -371,7 +373,8 @@ a{ color: inherit; }
   width: 100%; max-width: 360px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--brand-blue), var(--accent)) 1;
   border-radius: var(--radius);
   padding: 30px 26px;
 }
@@ -380,8 +383,8 @@ a{ color: inherit; }
   font-family: var(--font-display); font-weight:700; font-size: 20px;
   margin-bottom: 4px;
 }
-.login-card .brand .dot{
-  width:11px; height:11px; border-radius:3px; background: var(--accent); transform: rotate(45deg);
+.login-card .brand .logo-mark{
+  height: 40px; width: auto;
 }
 .login-card p.sub{ color: var(--text-dim); font-size: 13px; margin: 0 0 22px; }
 .field{ margin-bottom: 14px; }
@@ -410,7 +413,7 @@ a{ color: inherit; }
   cursor:pointer;
   margin-top: 4px;
 }
-.btn-primary:hover{ background: #ff7c53; }
+.btn-primary:hover{ background: var(--accent-light); }
 .btn-primary:disabled{ opacity:.6; cursor:default; }
 .form-msg{ font-size: 12px; margin-top: 12px; min-height: 16px; }
 .form-msg.error{ color: var(--danger); }
