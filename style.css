@@ -150,7 +150,6 @@ a{ color: inherit; }
   max-width: 270px;
   flex: 1 0 250px;
   display:flex; flex-direction:column;
-  max-height: calc(100vh - 190px);
 }
 .column.pool{
   border-style: dashed;
@@ -262,7 +261,6 @@ a{ color: inherit; }
 .column-body{
   padding: 10px;
   display:flex; flex-direction: column; gap: 8px;
-  overflow-y:auto;
 }
 .column-body:empty::after{
   content: "Sem placas nesta coluna";
