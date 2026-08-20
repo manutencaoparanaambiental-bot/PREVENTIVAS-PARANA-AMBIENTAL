@@ -1,4 +1,4 @@
-import { supabase, requireSession, wireLogout } from './supabaseClient.js';
+import { supabase, requireSession, wireLogout, isVisitor } from './supabaseClient.js';
 
 /**
  * Abre o modal de cadastro de um novo veículo (truck ou conjunto).
@@ -65,12 +65,23 @@ export async function initBoard(pagina){
   const session = await requireSession();
   if(!session) return;
 
+  const visitante = isVisitor(session);
+
   wireLogout(document.getElementById('btn-logout'));
   const userEl = document.getElementById('user-email');
-  if(userEl) userEl.textContent = session.user.email;
+  if(userEl){
+    if(visitante){
+      userEl.innerHTML = '<span class="visitor-badge">Visitante · somente leitura</span>';
+    } else {
+      userEl.textContent = session.user.email;
+    }
+  }
 
   const btnNovoVeiculo = document.getElementById('btn-novo-veiculo');
-  if(btnNovoVeiculo) btnNovoVeiculo.addEventListener('click', abrirModalNovoVeiculo);
+  if(btnNovoVeiculo){
+    if(visitante) btnNovoVeiculo.remove();
+    else btnNovoVeiculo.addEventListener('click', abrirModalNovoVeiculo);
+  }
 
   const boardEl = document.getElementById('board');
   let colunas = [];
@@ -114,7 +125,7 @@ export async function initBoard(pagina){
     const tipoClasse = caminhao.tipo === 'conjunto' ? 'conjunto' : 'truck';
     const tipoLabel = caminhao.tipo === 'conjunto' ? 'Conjunto' : 'Truck';
 
-    if(editingId === caminhao.id){
+    if(!visitante && editingId === caminhao.id){
       return `
         <div class="card ${tipoClasse} editing" data-id="${caminhao.id}">
           <div class="card-top">
@@ -136,11 +147,13 @@ export async function initBoard(pagina){
          <div class="card-field"><span class="card-field-label">Implemento</span><span class="plate reboque">${caminhao.reboque ?? ''}</span></div>`
       : `<div class="card-field"><span class="card-field-label">Placa</span><span class="plate placa">${caminhao.placa}</span></div>`;
 
+    const editBtnHTML = visitante ? '' : `<button class="edit-btn" data-edit="${caminhao.id}" title="Editar placa">✎</button>`;
+
     return `
-      <div class="card ${tipoClasse}" draggable="true" data-id="${caminhao.id}">
+      <div class="card ${tipoClasse}" draggable="${visitante ? 'false' : 'true'}" data-id="${caminhao.id}">
         <div class="card-top">
           <span class="tipo-badge">${tipoLabel}</span>
-          <button class="edit-btn" data-edit="${caminhao.id}" title="Editar placa">✎</button>
+          ${editBtnHTML}
         </div>
         ${corpoHTML}
       </div>`;
@@ -155,6 +168,23 @@ export async function initBoard(pagina){
           <span>${c.rotulo}</span>
           <span class="count">${count}</span>
         </div>`;
+    }
+
+    if(visitante){
+      const dataLabelVisitante = pagina === 'lubrificacao' ? (formatarDataBR(c.data_lubrificacao) || 'Data não definida') : null;
+      if(pagina !== 'lubrificacao'){
+        return `
+          <div class="col-head-top">
+            <span>${c.rotulo}</span>
+            <span class="count">${count}</span>
+          </div>`;
+      }
+      return `
+        <div class="col-head-top">
+          <span class="col-date">${dataLabelVisitante}</span>
+          <span class="count">${count}</span>
+        </div>
+        <div class="col-resp">Responsável: ${c.responsavel || '—'}</div>`;
     }
 
     if(pagina !== 'lubrificacao'){
@@ -223,6 +253,7 @@ export async function initBoard(pagina){
   }
 
   async function moverCaminhao(caminhaoId, novaColunaId){
+    if(visitante) return;
     if(novaColunaId === null || novaColunaId === '' || novaColunaId === undefined){
       await supabase.from('posicoes').delete()
         .eq('caminhao_id', caminhaoId).eq('pagina', pagina);

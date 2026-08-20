@@ -165,3 +165,26 @@ on conflict (caminhao_id, pagina) do nothing;
 
 alter table colunas add column if not exists data_lubrificacao date;
 alter table colunas add column if not exists responsavel text;
+
+-- =========================================================
+-- Migração incremental — Acesso visitante (somente leitura)
+-- Mantém a leitura liberada para qualquer usuário autenticado
+-- (inclusive visitante anônimo), mas passa a bloquear
+-- inserir/alterar/excluir para sessões anônimas. Não apaga
+-- nada, seguro rodar de novo.
+-- =========================================================
+
+drop policy if exists "write_caminhoes" on caminhoes;
+create policy "write_caminhoes" on caminhoes for all
+  using (auth.role() = 'authenticated' and coalesce((auth.jwt()->>'is_anonymous')::boolean, false) = false)
+  with check (auth.role() = 'authenticated' and coalesce((auth.jwt()->>'is_anonymous')::boolean, false) = false);
+
+drop policy if exists "write_colunas" on colunas;
+create policy "write_colunas" on colunas for all
+  using (auth.role() = 'authenticated' and coalesce((auth.jwt()->>'is_anonymous')::boolean, false) = false)
+  with check (auth.role() = 'authenticated' and coalesce((auth.jwt()->>'is_anonymous')::boolean, false) = false);
+
+drop policy if exists "write_posicoes" on posicoes;
+create policy "write_posicoes" on posicoes for all
+  using (auth.role() = 'authenticated' and coalesce((auth.jwt()->>'is_anonymous')::boolean, false) = false)
+  with check (auth.role() = 'authenticated' and coalesce((auth.jwt()->>'is_anonymous')::boolean, false) = false);

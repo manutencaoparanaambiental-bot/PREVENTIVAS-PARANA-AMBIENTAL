@@ -21,3 +21,8 @@ export function wireLogout(btn){
     window.location.href = './index.html';
   });
 }
+
+// Sessão de visitante = login anônimo do Supabase (só visualização, sem editar).
+export function isVisitor(session){
+  return !!(session && session.user && session.user.is_anonymous);
+}

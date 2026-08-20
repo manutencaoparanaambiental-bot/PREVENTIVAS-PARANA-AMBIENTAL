@@ -50,7 +50,8 @@ git push -u origin main
 
 ## Como usar
 
-- Entre com o e-mail/senha criado no passo 1.3.
+- Entre com o e-mail/senha criado no passo 1.3, ou use **"Entrar como
+  visitante"** para um acesso somente leitura (sem editar nada).
 - Cada card é uma placa. Ele mostra a placa do truck e, quando existe, a placa
   do reboque (julieta) — a cor da borda indica **truck** (amarelo) ou
   **conjunto** (verde).
@@ -88,3 +89,22 @@ O jeito mais simples é pelo próprio Supabase: **Table editor → caminhoes**.
 Insira `placa`, `reboque` (deixe vazio se for truck simples) e `tipo`
 (`truck` ou `conjunto`). A placa nova aparece automaticamente no app,
 dentro de "Não escalado", pronta para ser arrastada para a coluna certa.
+
+## Habilitar o acesso visitante
+
+O botão "Entrar como visitante" da tela de login usa o login anônimo do
+Supabase. Pra funcionar, é preciso ligar isso uma vez no painel:
+
+1. No Supabase, vá em **Authentication → Sign In / Providers** (ou
+   **Authentication → Settings**, dependendo da versão do painel) e ative
+   **"Allow anonymous sign-ins"**.
+2. Rode o SQL novo no final do `sql/schema.sql` (a parte da "Migração
+   incremental — Acesso visitante"). Ele mantém a leitura liberada para
+   todo mundo autenticado, mas bloqueia qualquer inserir/editar/excluir
+   vindo de uma sessão anônima — mesmo que alguém tente contornar a
+   interface, o Supabase recusa a escrita.
+
+Depois disso, quem entrar como visitante só visualiza os cronogramas:
+sem arrastar cards, sem editar placas, sem cadastrar veículo, sem editar
+data/responsável da coluna. Todos esses botões somem sozinhos pra esse
+tipo de acesso.

@@ -28,6 +28,10 @@
       <button type="submit" class="btn-primary" id="btn-entrar">Entrar</button>
       <p class="form-msg" id="msg"></p>
     </form>
+
+    <div class="visitor-divider"><span>ou</span></div>
+    <button type="button" class="btn-visitor" id="btn-visitante">Entrar como visitante</button>
+    <p class="visitor-hint">Acesso somente para visualizar os cronogramas, sem editar.</p>
   </div>
 </div>
 
@@ -57,6 +61,24 @@
       msg.textContent = 'E-mail ou senha inválidos.';
       msg.className = 'form-msg error';
       btn.disabled = false;
+      return;
+    }
+    window.location.href = './lubrificacao.html';
+  });
+
+  const btnVisitante = document.getElementById('btn-visitante');
+  const msgVisitante = document.getElementById('msg');
+  btnVisitante.addEventListener('click', async () => {
+    btnVisitante.disabled = true;
+    msg.textContent = '';
+    msg.className = 'form-msg';
+
+    const { error } = await supabase.auth.signInAnonymously();
+
+    if(error){
+      msg.textContent = 'Acesso de visitante indisponível no momento.';
+      msg.className = 'form-msg error';
+      btnVisitante.disabled = false;
       return;
     }
     window.location.href = './lubrificacao.html';
