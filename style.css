@@ -5,21 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Work+Sans:wght@400;500;600&display=swap');
 
 :root{
-  --bg: #12151B;
-  --panel: #181C24;
-  --panel-2: #1F2530;
-  --panel-3: #262E3B;
-  --border: #303A4A;
-  --text: #F2F3F5;
-  --text-dim: #97A1B0;
+  --bg: #F3F5F7;
+  --panel: #FFFFFF;
+  --panel-2: #F1F3F5;
+  --panel-3: #E7EAEE;
+  --border: #DDE1E6;
+  --text: #1A1D23;
+  --text-dim: #667085;
   --accent: #1B8915;
   --accent-dim: #146B10;
   --accent-light: #2FAE28;
   --brand-blue: #112C82;
   --brand-blue-light: #3255C4;
-  --truck: #FFC145;
-  --conjunto: #4C7BFF;
-  --danger: #FF5C5C;
+  --truck: #2E9E45;
+  --conjunto: #3163E0;
+  --danger: #E0453C;
   --radius: 10px;
   --font-display: 'Space Grotesk', 'Work Sans', sans-serif;
   --font-body: 'Work Sans', sans-serif;
@@ -38,7 +38,7 @@ html, body{
 
 body{
   background-image:
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 64px);
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.025) 0 1px, transparent 1px 64px);
 }
 
 a{ color: inherit; }
@@ -295,7 +295,7 @@ a{ color: inherit; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .04em;
-  color: var(--bg);
+  color: #FFFFFF;
   background: var(--truck);
   padding: 2px 6px;
   border-radius: 4px;
