@@ -55,22 +55,9 @@ git push -u origin main
   do reboque (julieta) — a cor da borda indica **truck** (amarelo) ou
   **conjunto** (verde).
 - Para mover uma placa: arraste o card para outra coluna.
-- Para editar o caminhão/implemento: clique no ✎ no canto do card, altere os
-  campos e clique em Salvar. Deixar o implemento vazio marca o caminhão como
+- Para editar a placa ou o reboque: clique no ✎ no canto do card, altere os
+  campos e clique em Salvar. Deixar o reboque vazio marca o caminhão como
   truck simples; preenchido, marca como conjunto (truck + julieta).
-- Tanto a Lubrificação quanto a Calibragem mostram, em cada coluna, a
-  **data real** e o **responsável** — clique no ✎ do cabeçalho da coluna
-  para definir/alterar os dois. São independentes: mudar a data/responsável
-  na Lubrificação nunca afeta a Calibragem, e vice-versa.
-- A coluna tracejada à esquerda chama **"Indisponível"** na Lubrificação
-  (veículos fora de programação) e **"Não escalado"** na Calibragem.
-- Cada coluna de programação (exceto a coluna tracejada) tem um botão verde
-  do **WhatsApp** no cabeçalho: clique para copiar automaticamente uma
-  mensagem pronta com a data, o responsável e todos os veículos daquela
-  coluna, formatados como Caminhão/Implemento. Aparece uma confirmação
-  "✓ Mensagem copiada!" e é só colar no WhatsApp.
-- Cards de **truck** mostram só a Placa. Cards de **conjunto** mostram
-  Caminhão e Implemento separados, sem ambiguidade.
 - O nome de cada coluna (ex. "Sábado 1") pode ser editado clicando nele —
   troque pela data real do sábado quando quiser.
 - Qualquer placa cadastrada sem posição aparece na coluna tracejada

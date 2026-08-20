@@ -156,12 +156,3 @@ from (values
 join caminhoes c on c.placa = x.placa
 join colunas col on col.pagina = 'lubrificacao' and col.posicao = x.coluna_posicao
 on conflict (caminhao_id, pagina) do nothing;
-
--- =========================================================
--- Migração incremental — Data e Responsável por coluna
--- Adiciona 2 colunas nullable em "colunas". Não apaga nada,
--- não altera dados existentes, seguro para rodar novamente.
--- =========================================================
-
-alter table colunas add column if not exists data_lubrificacao date;
-alter table colunas add column if not exists responsavel text;
