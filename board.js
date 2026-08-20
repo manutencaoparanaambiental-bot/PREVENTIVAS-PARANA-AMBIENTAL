@@ -1,6 +1,63 @@
 import { supabase, requireSession, wireLogout } from './supabaseClient.js';
 
 /**
+ * Abre o modal de cadastro de um novo veículo (truck ou conjunto).
+ * Fica fora do initBoard porque não depende da página (lubrificação/calibragem):
+ * o veículo cadastrado entra direto na tabela "caminhoes", compartilhada pelas duas.
+ */
+function abrirModalNovoVeiculo(){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h2>Novo veículo</h2>
+      <input class="edit-input" id="novo-veiculo-placa" placeholder="Placa do caminhão" autofocus />
+      <input class="edit-input" id="novo-veiculo-reboque" placeholder="Placa do implemento (vazio = truck simples)" />
+      <div class="modal-error" id="novo-veiculo-erro"></div>
+      <div class="edit-actions">
+        <button class="btn-save" id="novo-veiculo-salvar">Salvar</button>
+        <button class="btn-cancel" id="novo-veiculo-cancelar">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const inputPlaca = overlay.querySelector('#novo-veiculo-placa');
+  const inputReboque = overlay.querySelector('#novo-veiculo-reboque');
+  const erroEl = overlay.querySelector('#novo-veiculo-erro');
+  inputPlaca.focus();
+
+  function fechar(){ overlay.remove(); document.removeEventListener('keydown', onKeydown); }
+  function onKeydown(e){ if(e.key === 'Escape') fechar(); }
+  document.addEventListener('keydown', onKeydown);
+
+  overlay.addEventListener('click', e => { if(e.target === overlay) fechar(); });
+  overlay.querySelector('#novo-veiculo-cancelar').addEventListener('click', fechar);
+
+  overlay.querySelector('#novo-veiculo-salvar').addEventListener('click', async () => {
+    const placa = inputPlaca.value.trim().toUpperCase();
+    const reboque = inputReboque.value.trim().toUpperCase();
+
+    if(!placa){
+      erroEl.textContent = 'Informe a placa.';
+      return;
+    }
+
+    const tipo = reboque ? 'conjunto' : 'truck';
+    const { error } = await supabase.from('caminhoes').insert({ placa, reboque: reboque || null, tipo });
+
+    if(error){
+      erroEl.textContent = error.code === '23505' ? 'Já existe um caminhão com essa placa.' : 'Não foi possível salvar.';
+      return;
+    }
+
+    fechar();
+    // O veículo novo entra sem posição — aparece em "Não escalado"/"Indisponível",
+    // pronto para ser arrastado pra coluna certa. As telas abertas atualizam
+    // sozinhas via realtime (subscrição na tabela "caminhoes").
+  });
+}
+
+/**
  * Inicializa um quadro (lubrificação ou calibragem).
  * @param {string} pagina - 'lubrificacao' | 'calibragem'
  */
@@ -11,6 +68,9 @@ export async function initBoard(pagina){
   wireLogout(document.getElementById('btn-logout'));
   const userEl = document.getElementById('user-email');
   if(userEl) userEl.textContent = session.user.email;
+
+  const btnNovoVeiculo = document.getElementById('btn-novo-veiculo');
+  if(btnNovoVeiculo) btnNovoVeiculo.addEventListener('click', abrirModalNovoVeiculo);
 
   const boardEl = document.getElementById('board');
   let colunas = [];
@@ -67,6 +127,7 @@ export async function initBoard(pagina){
             <button class="btn-save" data-save="${caminhao.id}">Salvar</button>
             <button class="btn-cancel" data-cancel="${caminhao.id}">Cancelar</button>
           </div>
+          <button class="btn-delete" data-delete="${caminhao.id}" data-delete-placa="${caminhao.placa}">Excluir veículo</button>
         </div>`;
     }
 
@@ -223,6 +284,22 @@ export async function initBoard(pagina){
     await carregarDados();
   }
 
+  async function excluirVeiculo(caminhaoId, placa){
+    const ok = window.confirm(`Excluir o veículo ${placa}? Isso remove o cadastro e sua programação (lubrificação e calibragem). Não pode ser desfeito.`);
+    if(!ok) return;
+
+    const { error } = await supabase.from('caminhoes').delete().eq('id', caminhaoId);
+    if(error){
+      editError = 'Não foi possível excluir.';
+      render();
+      return;
+    }
+
+    editingId = null;
+    editError = '';
+    await carregarDados();
+  }
+
   function wireInteracoes(){
     // Arrastar card para outra coluna
     boardEl.querySelectorAll('.card[draggable="true"]').forEach(card => {
@@ -271,6 +348,11 @@ export async function initBoard(pagina){
         editingId = null;
         editError = '';
         render();
+      });
+    });
+    boardEl.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        excluirVeiculo(btn.dataset.delete, btn.dataset.deletePlaca);
       });
     });
 
