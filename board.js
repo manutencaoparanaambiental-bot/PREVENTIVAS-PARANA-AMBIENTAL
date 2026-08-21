@@ -164,7 +164,7 @@ export async function initBoard(pagina){
     const corpoHTML = caminhao.tipo === 'conjunto'
       ? `<div class="card-field"><span class="card-field-label">Caminhão</span><span class="plate placa">${caminhao.placa}</span></div>
          <div class="card-field"><span class="card-field-label">Implemento</span><span class="plate reboque">${caminhao.reboque ?? ''}</span></div>`
-      : `<div class="card-field"><span class="card-field-label">Placa</span><span class="plate placa">${caminhao.placa}</span></div>`;
+      : `<div class="card-field"><span class="card-field-label">Caminhão</span><span class="plate placa">${caminhao.placa}</span></div>`;
 
     const editBtnHTML = visitante ? '' : `<button class="edit-btn" data-edit="${caminhao.id}" title="Editar placa">✎</button>`;
     const waCardBtnHTML = pagina === 'lubrificacao'
