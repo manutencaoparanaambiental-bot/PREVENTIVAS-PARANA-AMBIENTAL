@@ -134,6 +134,12 @@ export async function initBoard(pagina){
     return linha.map(x => x.cam);
   }
 
+  function colunaDoCaminhao(caminhaoId){
+    const p = posicoesMap[caminhaoId];
+    if(!p) return null; // está em "Não escalado", sem coluna/data
+    return colunas.find(c => c.id === p.coluna_id) || null;
+  }
+
   function cardHTML(caminhao){
     const tipoClasse = caminhao.tipo === 'conjunto' ? 'conjunto' : 'truck';
     const tipoLabel = caminhao.tipo === 'conjunto' ? 'Conjunto' : 'Truck';
@@ -161,12 +167,18 @@ export async function initBoard(pagina){
       : `<div class="card-field"><span class="card-field-label">Placa</span><span class="plate placa">${caminhao.placa}</span></div>`;
 
     const editBtnHTML = visitante ? '' : `<button class="edit-btn" data-edit="${caminhao.id}" title="Editar placa">✎</button>`;
+    const waCardBtnHTML = pagina === 'lubrificacao'
+      ? `<button class="wa-btn" data-wa-card="${caminhao.id}" title="Copiar mensagem para o motorista">${WA_ICON}</button>`
+      : '';
 
     return `
       <div class="card ${tipoClasse}" draggable="${visitante ? 'false' : 'true'}" data-id="${caminhao.id}">
         <div class="card-top">
           <span class="tipo-badge">${tipoLabel}</span>
-          ${editBtnHTML}
+          <div class="card-actions">
+            ${waCardBtnHTML}
+            ${editBtnHTML}
+          </div>
         </div>
         ${corpoHTML}
       </div>`;
@@ -281,6 +293,44 @@ export async function initBoard(pagina){
     try{
       await navigator.clipboard.writeText(mensagem);
       mostrarToast('✓ Mensagem copiada! Agora é só colar no WhatsApp.');
+    }catch(err){
+      console.error(err);
+      mostrarToast('Não foi possível copiar. Tente novamente.', true);
+    }
+  }
+
+  function montarMensagemCard(caminhao){
+    const coluna = colunaDoCaminhao(caminhao.id);
+    const dataLabel = coluna ? (formatarDataBR(coluna.data_lubrificacao) || 'Data não definida') : 'Data não definida';
+
+    const linhas = [
+      '🛠️ LUBRIFICAÇÃO',
+      '',
+      `📅 Data: ${dataLabel}`,
+      '',
+      `🚛 Caminhão: ${caminhao.placa}`,
+    ];
+
+    if(caminhao.tipo === 'conjunto' && caminhao.reboque){
+      linhas.push(`🔧 Implemento: ${caminhao.reboque}`);
+    }
+
+    linhas.push('');
+    linhas.push(caminhao.tipo === 'conjunto'
+      ? 'Favor deixar o caminhão engatado, sem caçamba em cima.'
+      : 'Favor deixar o caminhão vazio, sem caçambas em cima.');
+
+    return linhas.join('\n').trim();
+  }
+
+  async function copiarMensagemCard(caminhaoId){
+    const caminhao = caminhoes.find(c => c.id === caminhaoId);
+    if(!caminhao) return;
+    const mensagem = montarMensagemCard(caminhao);
+
+    try{
+      await navigator.clipboard.writeText(mensagem);
+      mostrarToast('✓ Mensagem copiada! Agora é só colar no WhatsApp do motorista.');
     }catch(err){
       console.error(err);
       mostrarToast('Não foi possível copiar. Tente novamente.', true);
@@ -426,6 +476,13 @@ export async function initBoard(pagina){
     boardEl.querySelectorAll('[data-wa-coluna]').forEach(btn => {
       btn.addEventListener('click', () => {
         copiarMensagemColuna(btn.dataset.waColuna);
+      });
+    });
+
+    // Botão do WhatsApp de cada card: copia a mensagem para o motorista
+    boardEl.querySelectorAll('[data-wa-card]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        copiarMensagemCard(btn.dataset.waCard);
       });
     });
 
