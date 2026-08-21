@@ -1,5 +1,7 @@
 import { supabase, requireSession, wireLogout, isVisitor } from './supabaseClient.js';
 
+const WA_ICON = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.94 14.5L2 22l5.66-1.48A10 10 0 1 0 12 2zm0 18.2a8.17 8.17 0 0 1-4.17-1.14l-.3-.18-3.1.81.83-3.02-.2-.31A8.2 8.2 0 1 1 12 20.2zm4.52-6.13c-.25-.12-1.47-.72-1.7-.8-.23-.08-.4-.12-.57.12-.17.25-.65.8-.8.96-.15.17-.29.19-.54.06-.25-.12-1.04-.38-1.98-1.22-.73-.65-1.22-1.45-1.37-1.7-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.57-1.37-.78-1.87-.2-.49-.41-.42-.57-.43h-.49c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.23.9 2.42 1.02 2.59.12.17 1.77 2.7 4.29 3.79.6.26 1.07.42 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29z"/></svg>`;
+
 /**
  * Abre o modal de cadastro de um novo veículo (truck ou conjunto).
  * Fica fora do initBoard porque não depende da página (lubrificação/calibragem):
@@ -121,6 +123,17 @@ export async function initBoard(pagina){
     return [{ id: null, rotulo: 'Não escalado' }, ...colunas];
   }
 
+  function listaDaColuna(key){
+    const linha = [];
+    caminhoes.forEach(cam => {
+      const p = posicoesMap[cam.id];
+      const k = p ? p.coluna_id : 'pool';
+      if(k === key) linha.push({ cam, ordem: p ? p.ordem : 0 });
+    });
+    linha.sort((a,b) => a.ordem - b.ordem);
+    return linha.map(x => x.cam);
+  }
+
   function cardHTML(caminhao){
     const tipoClasse = caminhao.tipo === 'conjunto' ? 'conjunto' : 'truck';
     const tipoLabel = caminhao.tipo === 'conjunto' ? 'Conjunto' : 'Truck';
@@ -159,7 +172,7 @@ export async function initBoard(pagina){
       </div>`;
   }
 
-  function colunaHeaderHTML(c, count){
+  function colunaHeaderHTML(c, count, key){
     const isPool = c.id === null;
 
     if(isPool){
@@ -170,33 +183,7 @@ export async function initBoard(pagina){
         </div>`;
     }
 
-    if(visitante){
-      const dataLabelVisitante = pagina === 'lubrificacao' ? (formatarDataBR(c.data_lubrificacao) || 'Data não definida') : null;
-      if(pagina !== 'lubrificacao'){
-        return `
-          <div class="col-head-top">
-            <span>${c.rotulo}</span>
-            <span class="count">${count}</span>
-          </div>`;
-      }
-      return `
-        <div class="col-head-top">
-          <span class="col-date">${dataLabelVisitante}</span>
-          <span class="count">${count}</span>
-        </div>
-        <div class="col-resp">Responsável: ${c.responsavel || '—'}</div>`;
-    }
-
-    if(pagina !== 'lubrificacao'){
-      // Calibragem: mantém o comportamento original (rótulo livre editável)
-      return `
-        <div class="col-head-top">
-          <input class="rotulo-edit" data-coluna-id="${c.id}" value="${c.rotulo}" />
-          <span class="count">${count}</span>
-        </div>`;
-    }
-
-    if(editingColunaId === c.id){
+    if(!visitante && editingColunaId === c.id){
       return `
         <div class="col-edit-form">
           <input type="date" class="col-edit-input" data-col-field="data" value="${c.data_lubrificacao ?? ''}" />
@@ -210,46 +197,94 @@ export async function initBoard(pagina){
     }
 
     const dataLabel = formatarDataBR(c.data_lubrificacao) || 'Definir data';
+    const editBtnHTML = visitante ? '' : `<button class="col-edit-btn" data-col-edit="${c.id}" title="Editar data e responsável">✎</button>`;
     return `
       <div class="col-head-top">
         <span class="col-date">${dataLabel}</span>
         <div class="col-head-actions">
-          <button class="col-edit-btn" data-col-edit="${c.id}" title="Editar data e responsável">✎</button>
+          ${editBtnHTML}
           <span class="count">${count}</span>
         </div>
       </div>
-      <div class="col-resp">Responsável: ${c.responsavel || '—'}</div>`;
+      <div class="col-resp">
+        <span>Responsável: ${c.responsavel || '—'}</span>
+        <button class="wa-btn" data-wa-coluna="${key}" title="Copiar programação para o WhatsApp">${WA_ICON}</button>
+      </div>`;
   }
 
   function render(){
     const seq = ordemColunas();
-    const porColuna = {};
-    seq.forEach(c => { porColuna[c.id ?? 'pool'] = []; });
-
-    caminhoes.forEach(cam => {
-      const p = posicoesMap[cam.id];
-      const key = p ? p.coluna_id : 'pool';
-      if(!porColuna[key]) porColuna[key] = [];
-      porColuna[key].push({ cam, ordem: p ? p.ordem : 0 });
-    });
-    Object.values(porColuna).forEach(list => list.sort((a,b) => a.ordem - b.ordem));
 
     boardEl.innerHTML = seq.map(c => {
       const key = c.id ?? 'pool';
-      const lista = porColuna[key] || [];
+      const lista = listaDaColuna(key);
       const isPool = c.id === null;
       return `
         <div class="column ${isPool ? 'pool' : ''}" data-coluna-id="${key}">
           <div class="column-header">
-            ${colunaHeaderHTML(c, lista.length)}
+            ${colunaHeaderHTML(c, lista.length, key)}
           </div>
           <div class="column-body" data-coluna-id="${key}">
-            ${lista.map(x => cardHTML(x.cam)).join('')}
+            ${lista.map(cam => cardHTML(cam)).join('')}
           </div>
         </div>`;
     }).join('');
 
     wireInteracoes();
+  }
+
+  function mostrarToast(msg, isError){
+    const el = document.createElement('div');
+    el.className = 'toast' + (isError ? ' toast-error' : '');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, 3000);
+  }
+
+  function montarMensagemColuna(coluna, lista){
+    const tituloEmoji = pagina === 'lubrificacao' ? '🛠️ LUBRIFICAÇÃO' : '🛞 CALIBRAGEM';
+    const dataLabel = formatarDataBR(coluna.data_lubrificacao) || 'Data não definida';
+    const responsavel = coluna.responsavel || 'Não definido';
+
+    const linhas = [
+      tituloEmoji,
+      '',
+      `📅 Data: ${dataLabel}`,
+      `👤 Responsável: ${responsavel}`,
+      '',
+      'Veículos programados:',
+      '',
+    ];
+
+    lista.forEach(cam => {
+      linhas.push(`🚛 Caminhão: ${cam.placa}`);
+      if(cam.tipo === 'conjunto' && cam.reboque){
+        linhas.push(`🔧 Implemento: ${cam.reboque}`);
+      }
+      linhas.push('');
+    });
+
+    linhas.push(`Total: ${lista.length} veículo${lista.length === 1 ? '' : 's'}`);
+    return linhas.join('\n').trim();
+  }
+
+  async function copiarMensagemColuna(colunaId){
+    const coluna = colunas.find(c => c.id === colunaId);
+    if(!coluna) return;
+    const lista = listaDaColuna(colunaId);
+    const mensagem = montarMensagemColuna(coluna, lista);
+
+    try{
+      await navigator.clipboard.writeText(mensagem);
+      mostrarToast('✓ Mensagem copiada! Agora é só colar no WhatsApp.');
+    }catch(err){
+      console.error(err);
+      mostrarToast('Não foi possível copiar. Tente novamente.', true);
+    }
   }
 
   async function moverCaminhao(caminhaoId, novaColunaId){
@@ -387,12 +422,10 @@ export async function initBoard(pagina){
       });
     });
 
-    // Edição do rótulo da coluna (calibragem — comportamento original)
-    boardEl.querySelectorAll('.rotulo-edit').forEach(input => {
-      input.addEventListener('change', async () => {
-        await supabase.from('colunas')
-          .update({ rotulo: input.value })
-          .eq('id', input.dataset.colunaId);
+    // Botão do WhatsApp: copia a mensagem da coluna para a área de transferência
+    boardEl.querySelectorAll('[data-wa-coluna]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        copiarMensagemColuna(btn.dataset.waColuna);
       });
     });
 
